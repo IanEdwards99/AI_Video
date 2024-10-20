@@ -2,87 +2,68 @@ from openai import OpenAI
 import urllib.request
 import requests
 from pathlib import Path
+import create_video
 client = OpenAI()
 
-def extract_image_prompt(input, length=4):
-    prompts = []
-    for i in range(0,length):
-        prompts.append((input[input.find("Prompt:")+7:input.find("###")]).strip())
-        input = input[input.find("###")+3:]
-    if (len(prompts) > length):
-        raise Exception("Prompt list too long!") 
-    return prompts
+STORY_PARTS = 20
 
-def extract_audio_prompt(input, length=4):
-    audio_prompts = []
-    for i in range(0,length):
-        audio_prompts.append((input[input.find("!!!")+3:input.find("###")]).strip())
+input_story = "a world in which animals evolved to be sentient. No humans exist. Describe the story of cats evolving from primal cats to a medieval society of cats. Include a central cat figure to cat history that was crucial to uniting cat kingdoms. Include some details about warfare against dogs. Make it a cliff hanger ending about the possible fall of the cat kingdom due to dog invasions. Keep it medieval with swords, bows and magic."
+
+def extract_prompts(input, length=4):
+    prompts = []
+    for i in range(0, length):
+        image_prompt = (input[input.find("Image Prompt: ") + 14:input.find("###")]).strip()
         input = input[input.find("###")+3:]
-    if (len(audio_prompts) > length):
-        raise Exception("Prompt list too long!") 
-    return audio_prompts
+        audio_prompt = (input[input.find("Audio: ") + 7:input.find("###")]).strip()  # Adjusted for audio prompt being storytelling
+        input = input[input.find("###")+3:]
+        prompts.append((image_prompt, audio_prompt))
+    return prompts[:length]
 
 messages=[
-    {"role": "system", "content": "You are a content creator for short stories with audio overlayed on images."},
-    {"role": "assistant", "content": "You will create a sci-fi short story that can be told with images and audio. The story should be clear and interesting to follow. Take your time, and follow a writer's process in which you make a draft, review it and create a final masterpiece."},
-    {"role": "user", "content": "Write a sci-fi short story that can be used as the plot for an instagram reel. First write a draft story in your head without telling me, review it and produce a final interesting short story. Do NOT output anything. Keep the final story in your head."},
-    {"role": "assistant", "content": "Summarize the story into 8 main parts and keep this information in your head, do NOT output this summary."},
-    {"role": "user", "content": "Create an image generation prompt for each of the 8 main parts you just summarized. Display each prompt on a separate line, starting with: 'Prompt:'. Indicate the end of each prompt with ###"}
+    {"role": "system", "content": "You are a story creator, generating an interesting exciting narrative with corresponding visual and audio prompts. Avoid cliches."},
+    {"role": "assistant", "content": "Write a story about " + input_story + "that flows naturally, adding emotional depth and maintaining a consistent narrative arc."},
+    {"role": "user", "content": "Write the entire story with a beginning, middle, and end. Focus on emotional moments and plot progression."},
+    {"role": "assistant", "content": "Now split the story into " + str(STORY_PARTS) + " parts. Each part should flow narratively. Make sure there are 20 distinct parts."},
+    {"role": "user", "content": "For each part (" + str(STORY_PARTS) + " parts), generate two things: First, an image generation prompt starting with 'Image Prompt: '. Make sure the image generation prompt keeps the same art style as the rest of the image prompts, and any characters created remain consistent in appearance in subsequent images. Ensure the images reflect the time period and technology of the story. Keep in mind the entire narrative when creating the image. Secondly, create the story text as the audio starting with 'Audio: '. Mark the end of the 'Image Prompt: ' part with '###' and mark the end of the 'Audio: ' part with '###'. Do not add any extra formatting or tags. Here is an example of the desired output: Part 1\nImage Prompt: A large frog.###\nAudio: Sitting quietly on a lily pad was a large frog called Joe.###"}
 ]
 
 completion = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="gpt-4-turbo",
   messages = messages
 )
 
-# print(completion.choices[0].message.content)
+print(completion.choices[0].message.content)
 
-image_prompts = extract_image_prompt(completion.choices[0].message.content, 8)
-image_prompts = list(filter(None, image_prompts))
+prompts = extract_prompts(completion.choices[0].message.content, STORY_PARTS)
 
-print(image_prompts)
+for idx, (image, audio) in enumerate(prompts):
+    print(f"Part {idx+1} Image Prompt: {image}")
+    print(f"Part {idx+1} Storytelling (Audio): {audio}")
 
-messages.append({"role": "assistant", "content": "You just generated these descriptions: " + completion.choices[0].message.content})
-messages.append({"role": "user", "content": "Tell the story behind each image prompt. Start each image prompt's story with !!! and end each with ###"})
-
-completion = client.chat.completions.create(
-  model="gpt-3.5-turbo",
-  messages=messages
-)
-
-
-# print(completion.choices[0].message.content)
-
-audio_prompts = extract_audio_prompt(completion.choices[0].message.content, 8)
-audio_prompts = list(filter(None, audio_prompts))
-print(audio_prompts)
-
-val = 0
 scenes = []
-for i in image_prompts:
+for idx, (image_prompt, audio_prompt) in enumerate(prompts):
     response = client.images.generate(
     model="dall-e-3",
-    prompt=i,
+    prompt=image_prompt,
     size="1024x1024",
     quality="standard",
     n=1,
     )
 
     image_url = response.data[0].url
-    filename = "image_" + str(val)
+    filename = "data/image_" + str(idx)
     r = requests.get(image_url, allow_redirects=True)
     open(filename, 'wb').write(r.content)
-    print(image_url)
     
-    audio_file_name = "audio_" + str(val) + ".mp3"
-    speech_file_path = Path(__file__).parent / audio_file_name
+    audio_file_name = "data/audio_" + str(idx) + ".mp3"
+    speech_file_path = audio_file_name
     response = client.audio.speech.create(
-    model="tts-1",
-    voice="onyx",
-    input=audio_prompts[val]
+    model="tts-1-hd",
+    voice="fable",
+    input=audio_prompt
     )
 
     response.stream_to_file(speech_file_path)
 
-    scenes.append((filename, audio_file_name))
-    val += 1
+print("-----------------------------------------\nGenerating video from images and audio:\n-----------------------------------------")
+create_video.create_video_from_images_and_audio(STORY_PARTS)
