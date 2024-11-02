@@ -5,7 +5,7 @@ import os
 def mp3PNGMerge(STORY_PARTS, fileSaveName):
     for i in range(0,STORY_PARTS):
         audio_clip = AudioFileClip("data/audio_" + str(i) + ".mp3")
-        image_clip = ImageClip("data/image_" + str(i))
+        image_clip = ImageClip("data/image_" + str(i) + ".png")
         video_clip = image_clip.set_audio(audio_clip)
         video_clip.duration = audio_clip.duration
         video_clip.fps = 20
