@@ -11,14 +11,13 @@ DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
 # User input
-input_story = (
-    "Tell the history of a sentient humanoid cat empire evolving from tribal to medieval to modern to sci-fi technology. "
-    "No humans exist. Include conflict with evil imperial hedgehogs and conquesting dogs. Focus on broad conflicts and progression of the cat race."
+input_story = ( 
+    "A story set in the Catan map universe. Dungeons and Dragons races live in this Catan universe and its expansions. Describe the story of a cute mixed race girl with curly black hair exploring this world. Her adventure ends with romance as she meets an engineer who is a nerdy slim white man."
 )
 
 style_guide = (
-    "Style guide for the image: Anime style. Digital painting. Soft lighting. Warm tones. Soft shadows. Japanese. Only cats, hedgehogs and dogs are depicted. No humans, nothing resembling a human in the image. No humans in the background or foreground. "
-    " Include lush vegetation and overgrown environments. Do NOT include cat girls."
+    "Style guide for the image: Cute anime style. Picture book. Soft lighting. Warm tones. Simple colors. Soft shadows. Japanese. "
+    " Include Catan resource types as the backgrounds: Wheat from wheat fields, clay from quarries, stone from mountains, wood from forests and sheep from farms."
 )
 
 # Helper Functions
