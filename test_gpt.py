@@ -12,12 +12,11 @@ DATA_DIR.mkdir(exist_ok=True)
 
 # User input
 input_story = ( 
-    "A story set in the Catan map universe. Dungeons and Dragons races live in this Catan universe and its expansions. Describe the story of a cute mixed race girl with curly black hair exploring this world. Her adventure ends with romance as she meets an engineer who is a nerdy slim white man."
+    "my friend Liam. He is a Cape Townian now living in Eindhoven working for ASML as an electrical engineer for a department called LAB - supporting photolithography manufacturing issues. He is average height, white male, big lips and a large nose. Tell the story of his downfall from health to insanity as he spends too much money on magic the gathering cards."
 )
 
 style_guide = (
-    "Style guide for the image: Cute anime style. Picture book. Soft lighting. Warm tones. Simple colors. Soft shadows. Japanese. "
-    " Include Catan resource types as the backgrounds: Wheat from wheat fields, clay from quarries, stone from mountains, wood from forests and sheep from farms."
+    "Style guide for the image: Comic book corporate style. Picture book. Sharp outlines, comic book effects. Simple colors. Soft shadows. "
 )
 
 # Helper Functions
@@ -55,7 +54,7 @@ def generate_story_parts(input_story, style_guide, story_parts=5):
         {"role": "assistant", "content": (
             f"Generate {story_parts} distinct story parts. Each should include two parts: "
             "First: An image generation prompt. Keep art style, time period, and environment consistent across prompts. Start the prompt with 'Image Prompt: '. Use '###' to mark the end of the prompt. "
-            "Second: A storytelling audio prompt, telling the story of each image. Start the prompt with 'Audio: '. Use '###' to mark the end of the prompt. "
+            "Second: A storytelling audio prompt, telling the story of each image. Optimize this prompt for TTS output. Start the prompt with 'Audio: '. Use '###' to mark the end of the prompt. "
             "Example format: Part 1\nImage Prompt: A large frog.###\nAudio Prompt: Sitting quietly on a lily pad was a large frog named Joe.###"
         )}
     ]
@@ -78,9 +77,9 @@ def generate_style_guide(input_story):
     """Generates a style guide for the image prompts based on the story context."""
     messages = [
         {"role": "user", "content": (
-            f"Describe an image art style for the story '{input_story}', similar to digital paintings with soft lighting, warm tones, "
-            "soft shadows, impressionistic brushstrokes, and detailed creatures. Specify depicted elements (e.g., cats, dogs) and exclusions (e.g., humans). "
-            "Provide a succinct style summary."
+            f"Describe an image art style for the story '{input_story}'. Reference an existing art style or movement as an example. "
+            "Mention guidelines to avoid depicting entities not relevant to the story. Specify depicted elements (e.g., cats, dogs) and exclusions (e.g., humans). "
+            "Provide a short style summary."
         )}
     ]
     completion = client.chat.completions.create(model="gpt-4-turbo", messages=messages)
@@ -106,8 +105,8 @@ def download_audio(audio_text, filename):
 #******# Main script #*******#
 
 # Generate a style guide based on the input story
-# style_guide = generate_style_guide(input_story)
-# print("Generated Style Guide:\n", style_guide)
+style_guide = generate_style_guide(input_story)
+print("Generated Style Guide:\n", style_guide)
 
 # Generate story parts with image and audio prompts
 prompts = generate_story_parts(input_story, style_guide, STORY_PARTS)
